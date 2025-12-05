@@ -1,0 +1,4 @@
+name,x,y,z,yaw,size_x,size_y,camera_radius_max,camera_height_min,camera_height_max
+BE_Stage_00,60.0,-390.0,0.0,0.0,250.0,300.0,250.0,130.0,220.0
+BE_Stage_01,330.0,180.0,1.5,0.0,200.0,200.0,170.0,130.0,250.0
+BE_Stage_02,-100.0,200.0,0.0,0.0,300.0,280.0,180.0,130.0,250.0

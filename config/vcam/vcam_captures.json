@@ -1,0 +1,134 @@
+{
+    "approach": {
+        "landscape": {
+            "14": [
+                "vcam_approach_20240726_0059.json",
+                "vcam_approach_20240726_0072.json",
+                "vcam_approachlong_20240726_0058.json",
+                "vcam_approachlong_20240726_0071.json"
+            ]
+        },
+        "portrait": {
+            "14": [
+                "vcam_approach_20240726_0060.json",
+                "vcam_approach_20240726_0074.json",
+                "vcam_approachlong_20240726_0061.json",
+                "vcam_approachlong_20240726_0073.json"
+            ]
+        }
+    },
+    "approach_avp": {
+        "landscape": {
+            "0": [
+                "vcam_capture_avp_20250121_0006.json",
+                "vcam_capture_avp_20250121_0007.json",
+                "vcam_capture_avp_20250121_0008.json",
+                "vcam_capture_avp_20250121_0009.json",
+                "vcam_capture_avp_20250121_0010.json",
+                "vcam_capture_avp_20250121_0011.json"
+            ]
+        }
+    },
+    "approachshort": {
+        "landscape": {
+            "14": [
+                "vcam_approach_20240726_0059.json",
+                "vcam_approach_20240726_0072.json"
+            ]
+        },
+        "portrait": {
+            "14": [
+                "vcam_approach_20240726_0060.json",
+                "vcam_approach_20240726_0074.json"
+            ]
+        }
+    },
+    "orbit": {
+        "landscape": {
+            "14": [
+                "vcam_freestyle180_20240726_0055.json",
+                "vcam_freestyle180_20240726_0069.json",
+                "vcam_orbit180_20240726_0053.json",
+                "vcam_orbit180_20240726_0067.json"
+            ]
+        },
+        "portrait": {
+            "14": [
+                "vcam_freestyle180_20240726_0057.json",
+                "vcam_freestyle180_20240726_0070.json",
+                "vcam_orbit180_20240726_0054.json",
+                "vcam_orbit180_20240726_0068.json"
+            ]
+        }
+    },
+    "orbit_avp": {
+        "landscape": {
+            "0": [
+                "vcam_capture_avp_20250121_0012.json",
+                "vcam_capture_avp_20250121_0013.json",
+                "vcam_capture_avp_20250121_0014.json",
+                "vcam_capture_avp_20250121_0015.json",
+                "vcam_capture_avp_20250121_0016.json",
+                "vcam_capture_avp_20250121_0017.json"
+            ]
+        }
+    },
+    "stand": {
+        "landscape": {
+            "14": [
+                "vcam_stand_20240723_0014.json",
+                "vcam_stand_20240723_0026.json",
+                "vcam_stand_20240726_0047.json",
+                "vcam_stand_20240726_0048.json",
+                "vcam_stand_20240726_0049.json",
+                "vcam_stand_20240726_0062.json",
+                "vcam_stand_20240726_0063.json"
+            ],
+            "14-28": [
+                "vcam_stand_20240723_0015.json",
+                "vcam_stand_20240723_0032.json"
+            ],
+            "28": [
+                "vcam_stand_20240723_0015.json",
+                "vcam_stand_20240723_0032.json"
+            ]
+        },
+        "portrait": {
+            "14": [
+                "vcam_stand_20240723_0017.json",
+                "vcam_stand_20240723_0036.json",
+                "vcam_stand_20240726_0050.json",
+                "vcam_stand_20240726_0052.json",
+                "vcam_stand_20240726_0064.json",
+                "vcam_stand_20240726_0065.json"
+            ],
+            "14-28": [
+                "vcam_stand_20240723_0016.json",
+                "vcam_stand_20240723_0042.json"
+            ],
+            "28": [
+                "vcam_stand_20240723_0016.json",
+                "vcam_stand_20240723_0042.json"
+            ]
+        }
+    },
+    "stand_avp": {
+        "landscape": {
+            "0": [
+                "vcam_capture_avp_20250121_0000.json",
+                "vcam_capture_avp_20250121_0001.json",
+                "vcam_capture_avp_20250121_0002.json",
+                "vcam_capture_avp_20250121_0003.json",
+                "vcam_capture_avp_20250121_0004.json",
+                "vcam_capture_avp_20250121_0005.json"
+            ]
+        }
+    },
+    "render": {
+        "config": {
+            "vcam": [
+                "vcam_captures.json"
+            ]
+        }
+    }
+}
