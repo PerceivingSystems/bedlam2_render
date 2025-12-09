@@ -81,17 +81,18 @@ BEDLAM2 rendering can use the following special plugins:
     + Add `BE_CineCameraActor_Blueprint` from Core assets as child at origin
       + in Lookat Tracking Settings
         + set `BE_CameraTarget` as Actor To Track
-        + set Interp Speed to 0.5 for smooth tracking
         + enable Allow Roll
 + Change path in BEDLAM2 UI to target render folder
   + Example: `C:\bedlam2\images\test`
 + Click on `[Create LevelSequences]` and wait for them be created under `/Game/Bedlam/LevelSequences/`
   + Button will turn green at the end when LevelSequence generation was successful
   + Details: [create_level_sequences_csv.py](Core/Python/create_level_sequences_csv.py)
++ If rendering normals: Select desired format (camera-space or world-space)
 + Select render preset
   + `1-1-7_EXR_PNG`: Render every frame (30fps image sequences, 7 temporal samples, motion blur), create EXR files with ground truth information, create PNG files
-  + `1-1-1_DepthMask`: Render depth pass for every frame with only 1 spatial and 1 temporal sample (no motion blur), create only EXR files
+  + `1-1-1_DepthMask`: Render depth pass with segmentation masks for every frame with only 1 spatial and 1 temporal sample (no motion blur), create only EXR files
     + EXR files are in multilayer format and contain 16-bit depth information, RGB image and Cryptomatte masks
+  + `1-1-1_DepthMaskNormals`: Same as `1-1-1_DepthMask` but also add rendered normals in selected format to EXR files
 + Recommended: Activate `Save MRQ Batches` to create necessary data for command-line rendering
   + Rendering via command line will render in smaller batches and auto-restart editor to avoid out-of-memory issues
 + Select desired subset of LevelSequences in Content Browser

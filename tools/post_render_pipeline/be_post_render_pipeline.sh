@@ -2,7 +2,7 @@
 # Copyright (c) 2025 Max Planck Society
 # License: https://bedlam2.is.tuebingen.mpg.de/license.html
 #
-# Post render pipeline for BEDLAM EXR, body correspondence and camera normals renderings
+# Post render pipeline for BEDLAM2 image EXR (camera ground truth) and depth pass EXR renderings
 #
 # + Remove warmup frames from rendered image folders
 # + Generate H.264 .mp4 movies for rendered sequences
@@ -13,13 +13,18 @@
 #   + exrheader (openexr package)
 #
 #   Python venv:
-#   + numpy 1.24.2+
-#   + opencv-python-headless 4.7.0.72+
-#   + OpenEXR 1.3.9+
+#   + numpy 2.2.6
+#   + opencv-python-headless 4.12.0.88
+#   + OpenEXR 3.4.4
 #
-venv_path="$HOME/.virtualenvs/openexr"
+#   + if you use extract_layers mode:
+#     + see exr/exr_save_layers.sh for additional requirements
+#
+venv_path="$HOME/.virtualenvs/bedlam2"
 
-echo "Usage: $0 render_output_directory landscape|portrait [framerate]"
+echo "Usage: $0 render_output_directory landscape|portrait [extract_layers] [extract_masks]"
+
+framerate=30
 
 if [ $# -lt 2 ] ; then
     exit 1
@@ -37,14 +42,22 @@ if [ "$orientation" = "portrait" ]; then
     rotate="rotate"
 fi
 
-framerate=30
-if [ -n "$3" ] ; then
-    framerate=$3
-fi
+extract_layers=0
+extract_masks=0
+# Iterate over all arguments
+for arg in "$@"; do
+    if [ "$arg" == "extract_layers" ]; then
+        extract_layers=1
+    elif [ "$arg" == "extract_masks" ]; then
+        extract_masks=1
+    fi
+done
 
 echo "Processing render directory: '$render_output_directory'"
 echo "Orientation mode: $orientation"
 echo "Movie framerate: $framerate"
+echo "Extract EXR layers: $extract_layers"
+echo "Extract masks from EXR depth pass: $extract_masks"
 
 # Check for EXR+PNG render output
 png_folder="${render_output_directory%/}/png/"
@@ -92,17 +105,6 @@ if [ ! -d "$exr_folder" ]; then
     echo "WARNING: multilayer EXR (depth/mask/image/gt) directory not existing: '$exr_folder'"
 fi
 
-exr_bc_folder="${render_output_directory%/}/exr_bc/"
-if [ ! -d "$exr_bc_folder" ]; then
-    echo "WARNING: Body correspondence image directory not existing: '$exr_bc_folder'"
-fi
-
-exr_cl_folder="${render_output_directory%/}/exr_cl/"
-if [ ! -d "$exr_cl_folder" ]; then
-    echo "WARNING: Clothing label image directory not existing: '$exr_cl_folder'"
-fi
-
-
 # Delete all warmup frames (images with negative frame numbers)
 if [ -d "$png_folder" ]; then
 echo "Deleting warmup frames: '$png_folder'"
@@ -117,16 +119,6 @@ fi
 if [ -d "$exr_folder" ]; then
 echo "Deleting warmup frames: '$exr_folder'"
 find "$exr_folder" -maxdepth 2 -name "*-????.exr" -type f -delete
-fi
-
-if [ -d "$exr_bc_folder" ]; then
-echo "Deleting warmup frames: '$exr_bc_folder'"
-find "$exr_bc_folder" -maxdepth 2 -name "*-????.exr" -type f -delete
-fi
-
-if [ -d "$exr_cl_folder" ]; then
-echo "Deleting warmup frames: '$exr_cl_folder'"
-find "$exr_cl_folder" -maxdepth 2 -name "*-????.exr" -type f -delete
 fi
 
 if [ -d "$png_folder" ]; then
@@ -145,18 +137,6 @@ if [ -d "$exr_folder" ]; then
 num_exr_sequences=$(ls -1 $exr_folder | wc -l)
 num_exr_images=$(find $exr_folder -type f -name "*.exr" | wc -l)
 echo "Number of rendered multilayer EXR (depth/mask/image/gt) sequences: $num_exr_sequences [Images: $num_exr_images]"
-fi
-
-if [ -d "$exr_bc_folder" ]; then
-num_sequences=$(ls -1 $exr_bc_folder | wc -l)
-num_images=$(find $exr_bc_folder -type f -name "*.exr" | wc -l)
-echo "Number of rendered body correspondence sequences: $num_sequences [Images: $num_images]"
-fi
-
-if [ -d "$exr_cl_folder" ]; then
-num_sequences=$(ls -1 $exr_cl_folder | wc -l)
-num_images=$(find $exr_cl_folder -type f -name "*.exr" | wc -l)
-echo "Number of rendered clothing label sequences: $num_sequences [Images: $num_images]"
 fi
 
 read -p "Continue (y/n)?" answer
@@ -179,37 +159,6 @@ movie_folder="${render_output_directory%/}/mp4/"
 echo "Generating sequence movies (H.264 .mp4): '$movie_folder'"
 python3 ./create_movies_from_images.py "$png_folder" "$movie_folder" $framerate $rotate
 
-# Extract buffer data from raw exr
-#if [ -d "$exr_folder" ]; then
-#    echo "=============================================="
-#    echo "Extracting segmentation masks and camera poses"
-#    source "$venv_path/bin/activate"
-#    ./exr/exr_save_masks.py masks "$exr_folder" 16 > /dev/null
-#    if [ -d "$exr_bc_folder" ]; then
-#        echo "Extracting body correspondence segmentation masks"
-#        ./exr/exr_save_masks.py body_correspondence_masks "$exr_bc_folder" 16 > /dev/null
-#    fi
-#    deactivate
-
-#    echo "=============================================="
-#    echo "Extracting EXR layers"
-#    ./exr/exr_save_layers.sh "$exr_folder" 12 > /dev/null
-#fi
-
-
-if [ -d "$exr_bc_folder" ]; then
-echo "Extracting EXR body correspondence"
-./exr/exr_save_body_correspondence.sh "$exr_bc_folder" 12 > /dev/null
-fi
-
-if [ -d "$exr_cl_folder" ]; then
-echo "Extracting EXR clothing labels"
-./exr/exr_save_clothing_labels.sh "$exr_cl_folder" 12 > /dev/null
-echo "Masking EXR clothing labels"
-cl_folder="${render_output_directory%/}/exr_layers/clothing_labels/"
-./be_apply_masks.py "$cl_folder" 12 > /dev/null
-fi
-
 if [ -d "$exr_image_folder" ]; then
     # Generate overview images
     echo "Generating overview images"
@@ -220,7 +169,7 @@ if [ -d "$exr_image_folder" ]; then
     ./analysis/be_plot_camera_analysis.py "$render_output_directory"
 fi
 
-# Extract EXR depth  render camera ground truth
+# Extract EXR depth render camera ground truth
 if [ -d "$exr_folder" ]; then
     echo "Extracting EXR depth camera ground truth information"
     source "$venv_path/bin/activate"
@@ -228,4 +177,14 @@ if [ -d "$exr_folder" ]; then
     deactivate
     echo "Generating ground truth depth camera CSV from EXR depth JSON"
     ./exr/exr_gt_json_to_csv.py "$render_output_directory" meta_exr_depth > /dev/null
+
+    if [ "$extract_layers" -eq 1 ]; then
+        echo "Extracting EXR layers to exr_layers/ folder"
+        ./exr/exr_save_layers.sh "$exr_folder" 12 > /dev/null
+    fi
+
+    if [ "$extract_masks" -eq 1 ]; then
+        echo "Extracting body segmentation masks to exr_layers/masks/ folder"
+        ./exr/exr_save_masks.py "$exr_folder" 16 > /dev/null
+    fi
 fi

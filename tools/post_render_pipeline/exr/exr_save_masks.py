@@ -2,19 +2,19 @@
 # Copyright (c) 2025 Max Planck Society
 # License: https://bedlam2.is.tuebingen.mpg.de/license.html
 #
-# Body part segmentation masks (greyscale PNG) and camera ground truth (JSON) from Unreal Movie Render Queue raw 32-bit exr output file
+# Export body part segmentation masks (greyscale PNG) from Unreal Movie Render Queue raw 16-bit exr output file
 #
 # Generated EXR needs to be rendered without motion blur and antialiasing so that we have no partial coverage for the body parts and can use binary masks.
 #
 # Requirements:
-# + OpenEXR (1.3.9)
+# + OpenEXR (3.4.4)
 #   + Installation
 #     + sudo apt install build-essential
 #     + sudo apt install python3-dev
 #     + sudo apt install libopenexr-dev
 #     + pip install OpenEXR
 #
-# + OpenCV (4.7.0.72)
+# + OpenCV (4.10.0.84)
 #   + PNG export
 #   + Installation: pip install opencv-python-headless
 #
@@ -43,13 +43,6 @@ def process(input_exr, mask_type):
     output_dir = input_exr.parent.parent.parent
     exr = OpenEXR.InputFile(str(input_exr))
 
-    if mask_type == "masks":
-        meta_output_path = output_dir / "ground_truth" / "meta_exr" / input_exr.parent.name / input_exr.name.replace(".exr", "_meta.json")
-        status = process_meta(exr, meta_output_path)
-        if not status:
-            exr.close()
-            return False
-
     masks_output_path = output_dir / "exr_layers" / mask_type / input_exr.parent.name / input_exr.name
     status = process_masks(exr, masks_output_path)
     if not status:
@@ -61,36 +54,6 @@ def process(input_exr, mask_type):
 
 def process_args(args):
     return process(*args)
-
-def process_meta(exr, output_path):
-
-    print("Extracting meta information")
-    if (output_path.exists()):
-        print(f"  Skipping. File exists: {output_path}")
-        return True
-
-    header = exr.header()
-
-    meta = {}
-    for key in header.keys():
-        if key.startswith("unreal/"):
-            if "ActorHitProxyMask" in key:
-                continue
-
-            meta[key] = header[key].decode()
-
-    if len(meta) == 0:
-        print(f"ERROR: No Unreal meta information found in EXR file")
-        return False
-
-    if not output_path.parent.exists():
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    print(f"  Exporting: {output_path}")
-    with open(output_path, "w") as f:
-        json.dump(meta, f, indent=4)
-
-    return True
 
 def process_masks(exr, output_path):
 
@@ -245,31 +208,24 @@ def export_mask(exr, mask_names, manifest, data_id, image_size, output_path):
     return False
 
 def print_usage():
-    print("Usage: %s MASK_TYPE INPUT_EXR" % (sys.argv[0]), file=sys.stderr) # single file mode, input ends with .exr
-    print("Usage: %s MASK_TYPE INPUT_EXR_DIR [NUM_PROCESSES]" % (sys.argv[0]), file=sys.stderr) # batch mode
-    print("Supported MASK TYPE values:", file=sys.stderr)
-    print("  masks (will also export camera ground truth metadata)", file=sys.stderr)
-    print("  body_correspondence_masks", file=sys.stderr)
+    print("Usage: %s INPUT_EXR" % (sys.argv[0]), file=sys.stderr) # single file mode, input ends with .exr
+    print("Usage: %s INPUT_EXR_DIR [NUM_PROCESSES]" % (sys.argv[0]), file=sys.stderr) # batch mode
 
 ################################################################################
 # Main
 ################################################################################
 if __name__ == "__main__":
-    if (len(sys.argv) < 3) or (len(sys.argv) > 4):
+    if (len(sys.argv) < 2) or (len(sys.argv) > 3):
         print_usage()
         sys.exit(1)
 
-    mask_type = sys.argv[1]
-    if (mask_type != "masks") and (mask_type != "body_correspondence_masks"):
-        print(f"ERROR: invalid TYPE: {mask_type}", file=sys.stderr)
-        print_usage()
-        sys.exit(1)
+    mask_type = "masks"
 
-    input_exr = Path(sys.argv[2])
+    input_exr = Path(sys.argv[1])
 
     processes = DEFAULT_PROCESSES
     if len(sys.argv) >= 3:
-        processes = int(sys.argv[3])
+        processes = int(sys.argv[2])
 
     batch_mode = False
     if input_exr.is_dir():

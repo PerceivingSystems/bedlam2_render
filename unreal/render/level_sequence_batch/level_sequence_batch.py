@@ -6,7 +6,7 @@
 #
 # Notes:
 # + Python for Windows: py -3 level_sequence_batch.py PATH_TO_CSV PATH_TO_UPROJECT /Game/Bedlam/MAPNAME SEQUENCES_PER_BATCH
-#                       py -3 level_sequence_batch.py C:\bedlam2\images\20240625_1_2337_hdri\be_seq.csv C:\UE\UEProjects\5.3\BE_IBL\BE_IBL.uproject /Game/Bedlam/IBLMap 100
+#                       py -3 level_sequence_batch.py C:\bedlam2\images\test\be_seq.csv C:\UE\UEProjects\5.3\BE_IBL\BE_IBL.uproject /Game/Bedlam/IBLMap 100
 #
 
 from pathlib import Path
@@ -14,20 +14,11 @@ import subprocess
 import sys
 import time
 
-# Globals
+# Globals, adjust to match your Unreal Engine installation folder
 IMPORT_SCRIPT_PATH = "C:/UE/UE_5.3/Engine/Content/PS/Bedlam/Core/Python/create_level_sequences_csv.py" # need forward slashes when calling via -ExecutePythonScript
 UNREAL_APP_PATH = r"C:\UE\UE_5.3\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
 #IMPORT_SCRIPT_PATH = "F:/UE/UE_5.3/Engine/Content/PS/Bedlam/Core/Python/create_level_sequences_csv.py" # need forward slashes when calling via -ExecutePythonScript
 #UNREAL_APP_PATH = r"F:\UE\UE_5.3\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
-
-def worker(unreal_app_path, unreal_project_path, import_script_path, batch_index, num_batches):
-    subprocess_args = [unreal_app_path, unreal_project_path, f"-ExecutePythonScript={import_script_path} {batch_index} {num_batches}"]
-    print(subprocess_args)
-    subprocess.run(subprocess_args)
-    return True
-
-def worker_args(args):
-    return worker(*args)
 
 ################################################################################
 # Main
@@ -62,7 +53,7 @@ if __name__ == "__main__":
             finished = True
 
         print(f"Processing: [{sequence_index_start}, {sequence_index_end}]")
-        subprocess_args = [UNREAL_APP_PATH, unreal_project_path, unreal_map_path, f"-ExecutePythonScript={IMPORT_SCRIPT_PATH} {csv_path} Default 0 0 {sequence_index_start} {sequence_index_end}"]
+        subprocess_args = [UNREAL_APP_PATH, unreal_project_path, unreal_map_path, f"-ExecutePythonScript={IMPORT_SCRIPT_PATH} {csv_path} Default {sequence_index_start} {sequence_index_end}"]
         print(f"  {subprocess_args}")
         subprocess.run(subprocess_args)
 

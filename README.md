@@ -54,12 +54,12 @@ BEDLAM2 Unreal render setup utilizes a data-driven design approach where externa
 + Camera ground truth poses in Unreal coordinates are stored in EXR image metadata during rendering and later extracted in post-process stage to CSV and JSON format
 + Details: [unreal/render/](unreal/render/)
 
-## Post processing
+## Post-processing
 + Extract world-space camera ground truth information for center subframe
 + Generate MP4 movies from image sequences with ffmpeg
 + Generate overview images for first/middle/last image of each sequence
 + Generate camera motion plots from extracted camera ground truth
-+ Extract separate depth maps (EXR) and segmentation masks (PNG) if required EXR data is available
++ Extract separate depth maps (EXR), segmentation masks (PNG) and normal images (world-space or camera-space, PNG) if required EXR data is available
 + Details: [tools/post_render_pipeline/be_post_render_pipeline.sh](tools/post_render_pipeline/be_post_render_pipeline.sh)
 
 # Getting Started
@@ -90,7 +90,7 @@ C:\bedlam2\render
 └── unreal
 ```
 
-2. Create WSL2 Python 3.10.6+ venv, activate it and install required packages
+2. Create WSL2 Python 3.10.6+ venv at `$HOME/.virtualenvs/bedlam2/` , activate it and install required packages
 ```
 pip install -r requirements.txt
 ```

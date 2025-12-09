@@ -36,7 +36,6 @@ texture_body_root = "/Engine/PS/Meshcapade/SMPLX/Textures"
 texture_clothing_overlay_root = data_root_unreal + "Clothing/MaterialsSMPLX/Textures"
 
 material_hidden_name = data_root_unreal + "Core/Materials/M_SMPLX_Hidden"
-material_bodycorrespondence_name = data_root_unreal + "Core/Materials/BodyCorrespondence/M_BodyCorrespondence"
 
 material_hair_root = data_root_unreal + "Core/Materials/Hair"
 
@@ -582,7 +581,7 @@ def setup_time_of_day(level_sequence, time_of_day, sunsky_actor):
     return
 
 
-def add_level_sequence(name, camera_actor, camera_pose, ground_truth_logger_actor, camera_target_actor, camera_operator_actor, sequence_bodies, sequence_frames, hdri_name, camera_hfov=None, camera_movement_type="Default", camera_animations=None, cameraroot_yaw=None, cameraroot_location=None, use_body_correspondence=False, use_clothing_labels=False, time_of_day=None, sunsky_actor=None):
+def add_level_sequence(name, camera_actor, camera_pose, ground_truth_logger_actor, camera_target_actor, camera_operator_actor, sequence_bodies, sequence_frames, hdri_name, camera_hfov=None, camera_movement_type="Default", camera_animations=None, cameraroot_yaw=None, cameraroot_location=None, time_of_day=None, sunsky_actor=None):
     asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
 
     level_sequences_root_current = level_sequences_root
@@ -595,15 +594,6 @@ def add_level_sequence(name, camera_actor, camera_pose, ground_truth_logger_acto
             pose = camera_animations[name]["keyframes"][0]["camera_local"]
             # Use first keyframe camera pose as default
             camera_pose = ActorPose(pose["x"], pose["y"], pose["z"], 0.0, 0.0, 0.0) # x,y,z,yaw,pitch,roll
-
-    if use_body_correspondence:
-        level_sequences_root_current += "BodyCorrespondence/"
-        name += "_bc"
-
-    if use_clothing_labels:
-        level_sequences_root_current += "ClothingLabels/"
-        name += "_cl"
-
 
     level_sequence_path = level_sequences_root_current + name
 
@@ -848,11 +838,6 @@ def add_level_sequence(name, camera_actor, camera_pose, ground_truth_logger_acto
                 unreal.log_error(f"Cannot load Groom MaterialInstance: {sequence_body.haircolor_path}")
                 return False
 
-        # Remove clothing for body correspondence sequences
-        if use_body_correspondence:
-            sequence_body.texture_clothing_overlay = None
-            sequence_body.clothing_path = None
-
         # Check if we use clothing overlay textures instead of textured clothing geometry
         if sequence_body.texture_clothing_overlay is not None:
 
@@ -865,12 +850,7 @@ def add_level_sequence(name, camera_actor, camera_pose, ground_truth_logger_acto
         else:
             # Add body
             material = None
-            if use_body_correspondence:
-                material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_bodycorrespondence_name}'")
-                if not material:
-                    unreal.log_error(f"Cannot load material: {material_bodycorrespondence_name}")
-                    return False
-            elif sequence_body.texture_body is not None:
+            if sequence_body.texture_body is not None:
                 if sequence_body.shoe is not None:
                     material_asset_path = f"{material_shoe_root}/{sequence_body.shoe}/MI_{sequence_body.texture_body}_{sequence_body.shoe}"
                 else:
@@ -891,9 +871,6 @@ def add_level_sequence(name, camera_actor, camera_pose, ground_truth_logger_acto
                     return False
 
                 material = None
-
-                if use_clothing_labels:
-                    sequence_body.texture_clothing = "texture_00" # force label texture
 
                 if sequence_body.texture_clothing is not None:
                     outfit_name = sequence_body.texture_clothing.split("_texture_")[0] # Example: gr_aaron_009_texture_01 => gr_aaron_009
@@ -970,21 +947,13 @@ if __name__ == '__main__':
     if len(sys.argv) >= 3:
         camera_movement_type = sys.argv[2]
 
-    use_body_correspondence = False
-    if len(sys.argv) >= 4:
-        use_body_correspondence = bool(int(sys.argv[3]))
-
-    use_clothing_labels = False
-    if len(sys.argv) >= 5:
-        use_clothing_labels = bool(int(sys.argv[4]))
-
     sequence_index_min = None
-    if len(sys.argv) >= 6:
-        sequence_index_min = int(sys.argv[5])
+    if len(sys.argv) >= 4:
+        sequence_index_min = int(sys.argv[3])
 
     sequence_index_max = None
-    if len(sys.argv) >= 7:
-        sequence_index_max = int(sys.argv[6])
+    if len(sys.argv) >= 5:
+        sequence_index_max = int(sys.argv[4])
 
     camera_animations = None
     if camera_movement_type == "Default":
@@ -1251,24 +1220,10 @@ if __name__ == '__main__':
                     desc = f"{text_label} [{items_processed}/{total_items}]"
                     slow_task.enter_progress_frame(1, desc) # Advance progress by one item and update dialog text
 
-                    success = add_level_sequence(sequence_name, camera_actor, camera_pose, ground_truth_logger_actor, camera_target_actor, camera_operator_actor, sequence_bodies, sequence_frames, hdri_name, camera_hfov, camera_movement_type, camera_animations, cameraroot_yaw, cameraroot_location, use_body_correspondence=False, use_clothing_labels=False, time_of_day=time_of_day, sunsky_actor=sunsky_actor)
+                    success = add_level_sequence(sequence_name, camera_actor, camera_pose, ground_truth_logger_actor, camera_target_actor, camera_operator_actor, sequence_bodies, sequence_frames, hdri_name, camera_hfov, camera_movement_type, camera_animations, cameraroot_yaw, cameraroot_location, time_of_day=time_of_day, sunsky_actor=sunsky_actor)
                     cleanup_mask_layers() # Remove added layers used for segmentation mask naming
                     if not success:
                         break
-
-                    if use_body_correspondence:
-                        success = add_level_sequence(sequence_name, camera_actor, camera_pose, ground_truth_logger_actor, camera_target_actor, camera_operator_actor, sequence_bodies, sequence_frames, hdri_name, camera_hfov, camera_movement_type, camera_animations, cameraroot_yaw, cameraroot_location, use_body_correspondence=True, use_clothing_labels=False, time_of_day=None, sunsky_actor=None)
-                        cleanup_mask_layers() # Remove added layers used for segmentation mask naming
-
-                        if not success:
-                            break
-
-                    if use_clothing_labels:
-                        success = add_level_sequence(sequence_name, camera_actor, camera_pose, ground_truth_logger_actor, camera_target_actor, camera_operator_actor, sequence_bodies, sequence_frames, hdri_name, camera_hfov, camera_movement_type, camera_animations, cameraroot_yaw, cameraroot_location, use_body_correspondence=False, use_clothing_labels=True, time_of_day=None, sunsky_actor=None)
-                        cleanup_mask_layers() # Remove added layers used for segmentation mask naming
-
-                        if not success:
-                            break
 
                     items_processed += 1
 

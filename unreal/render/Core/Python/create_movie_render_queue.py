@@ -14,16 +14,14 @@ import time
 import unreal
 
 # Globals
-output_dir = r"C:\bedlam\images\test"
+output_dir = r"C:\bedlam2\images\test"
 data_root_unreal = "/Engine/PS/Bedlam/Core/Materials/MovieRenderQueue/"
 movie_render_queue_root = "/Game/Bedlam/MovieRenderQueue/"
 movie_render_queue_template = "/Engine/PS/Bedlam/Core/MovieRenderQueue/MRQ_Template"
 material_cameranormal = data_root_unreal + "MovieRenderQueue_CameraNormal"
-material_roughness = data_root_unreal + "MovieRenderQueue_Roughness"
-material_specular = data_root_unreal + "MovieRenderQueue_Specular"
-material_basecolor = data_root_unreal + "MovieRenderQueue_BaseColor"
+material_worldnormal = data_root_unreal + "MovieRenderQueue_WorldNormal"
 
-def add_render_job(pipeline_queue, level_sequence_data, output_frame_step, image_size, spatial_samples, temporal_samples, use_tsr=False):
+def add_render_job(pipeline_queue, level_sequence_data, output_frame_step, image_size, spatial_samples, temporal_samples):
 	global output_dir
 
 	level_sequence_name = str(level_sequence_data.asset_name)
@@ -40,9 +38,6 @@ def add_render_job(pipeline_queue, level_sequence_data, output_frame_step, image
 	job.set_editor_property('map', unreal.SoftObjectPath(map_path))
 
 	job.set_editor_property('author', "BEDLAM")
-
-	# Add deferred rendering
-	deferred_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
 
 	# Set output type PNG
 	jpg_setting = job.get_configuration().find_setting_by_class(unreal.MoviePipelineImageSequenceOutput_JPG)
@@ -73,15 +68,14 @@ def add_render_job(pipeline_queue, level_sequence_data, output_frame_step, image
 	antialiasing_setting.temporal_sample_count = temporal_samples
 
 	antialiasing_setting.override_anti_aliasing = True
-
-	if use_tsr:
-		antialiasing_setting.anti_aliasing_method = unreal.AntiAliasingMethod.AAM_TSR
-	else:
-		antialiasing_setting.anti_aliasing_method = unreal.AntiAliasingMethod.AAM_NONE
+	antialiasing_setting.anti_aliasing_method = unreal.AntiAliasingMethod.AAM_NONE
 
 	# Ensure proper Lumen warmup at frame 0, especially when rendering with frame skipping (6 fps)
 	antialiasing_setting.render_warm_up_frames = True
 	antialiasing_setting.engine_warm_up_count = 32
+
+	# Deferred renderer
+	deferred_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
 
 # Setup EXR render job for image pass with embedded ground truth camera information, 16-bit EXR with ZIP compression and additional PNG pass
 def add_render_job_exr_image(pipeline_queue, level_sequence_data, output_frame_step, image_size, spatial_samples, temporal_samples):
@@ -143,8 +137,8 @@ def add_render_job_exr_image(pipeline_queue, level_sequence_data, output_frame_s
 	# Deferred renderer
 	deferred_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
 
-# Setup EXR render job for generating depth map and segmentation masks
-def add_render_job_exr_depthmask(pipeline_queue, level_sequence_data, output_frame_step, image_size):
+# Setup EXR render job for generating depth map, segmentation masks, normals (optional)
+def add_render_job_exr_depthmask(pipeline_queue, level_sequence_data, output_frame_step, image_size, normals_type):
 	global output_dir
 
 	level_sequence_name = str(level_sequence_data.asset_name)
@@ -208,124 +202,34 @@ def add_render_job_exr_depthmask(pipeline_queue, level_sequence_data, output_fra
 	motion_vectors.enabled = False # disable motion vectors
 	deferred_setting.additional_post_process_materials[1] = motion_vectors
 
-	# Segmentation mask (Object ID) render setup
-	deferred_setting.disable_multisample_effects = True
-	objectid_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineObjectIdRenderPass)
-	world_settings = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world().get_world_settings()
-	world_partition = world_settings.get_editor_property("world_partition")
-	if world_partition is not None:
-		# World Partition system active, use folder type to identify masks
-		objectid_setting.id_type = unreal.MoviePipelineObjectIdPassIdType.FOLDER
-	else:
-		# Use layer system to identify masks
-		objectid_setting.id_type = unreal.MoviePipelineObjectIdPassIdType.LAYER
+	# Normals (optional)
+	if normals_type is not None:
+		material = None
+		if normals_type == "CameraSpace":
+			material_name = material_cameranormal
+			material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_name}'")
+			if not material:
+				unreal.log_error("Cannot load material: " + material_name)
+		elif normals_type == "WorldSpace":
+			material_name = material_worldnormal
+			material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_name}'")
+			if not material:
+				unreal.log_error("Cannot load material: " + material_name)
+		else:
+			unreal.log_error("Unsupported normals type: " + normals_type)
 
-# Setup EXR render job for generating depth map, segmentation masks, camera space normals, etc.
-def add_render_job_exr_normals(pipeline_queue, level_sequence_data, output_frame_step, image_size, body_correspondence=False, clothing_labels=False):
-	global output_dir
+		if material is not None:
+			post_process_normal = unreal.MoviePipelinePostProcessPass(True, material)
+			deferred_setting.additional_post_process_materials.append(post_process_normal)
 
-	level_sequence_name = str(level_sequence_data.asset_name)
-	# Create new movie pipeline job and set job parameters
-	job = pipeline_queue.allocate_new_job(unreal.MoviePipelineExecutorJob)
-	job.set_editor_property('job_name', level_sequence_name + "_exr")
-
-	# Note: Setting sequence will immediately load LevelSequence into memory in order to to retrieve shot list from sequence.
-	#       See UMoviePipelineExecutorJob::SetSequence() implementation for details.
-	job.set_editor_property('sequence', level_sequence_data.to_soft_object_path())
-
-	current_level = unreal.EditorLevelUtils.get_levels(unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world())[0]
-	map_path = unreal.SystemLibrary.get_path_name(unreal.SystemLibrary.get_outer_object(current_level))
-	job.set_editor_property('map', unreal.SoftObjectPath(map_path))
-
-	job.set_editor_property('author', "BEDLAM")
-
-	# Set output type EXR
-	jpg_setting = job.get_configuration().find_setting_by_class(unreal.MoviePipelineImageSequenceOutput_JPG)
-	if jpg_setting is not None:
-		job.get_configuration().remove_setting(jpg_setting)
-
-	exr_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_EXR)
-	exr_setting.compression = unreal.EXRCompressionFormat.ZIP # ZIP results in better compression than PIZ when including segmentation masks (ObjectIds)
-	exr_setting.multilayer = True
-
-	output_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-
-	exr_foldername = "exr"
-	if body_correspondence:
-		exr_foldername += "_bc"
-	if clothing_labels:
-		exr_foldername += "_cl"
-
-	output_directory = output_dir + "\\" + exr_foldername + "\\{sequence_name}"
-
-	file_name_format = "{sequence_name}_{frame_number}"
-
-	output_setting.output_directory = unreal.DirectoryPath(output_directory)
-	output_setting.file_name_format = file_name_format
-
-	output_setting.output_resolution = unreal.IntPoint(image_size[0], image_size[1])
-
-	output_setting.zero_pad_frame_numbers = 4
-	output_setting.output_frame_step = output_frame_step
-
-	# Anti-aliasing: Disable for depth/mask rendering
-	antialiasing_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineAntiAliasingSetting)
-
-	# Use 1 spatial sample for proper mask rendering
-	# Issue (5.2.1): Will result in fully transparent EXR layer images (alpha=0, instead of alpha=1 with 8 spatial samples)
-	antialiasing_setting.spatial_sample_count = 1
-	antialiasing_setting.temporal_sample_count = 1
-	antialiasing_setting.override_anti_aliasing = True
-	antialiasing_setting.anti_aliasing_method = unreal.AntiAliasingMethod.AAM_NONE
-
-	# Ensure proper Lumen warmup at frame 0, especially when rendering with frame skipping (6 fps)
-	antialiasing_setting.render_warm_up_frames = True
-	antialiasing_setting.engine_warm_up_count = 32
-
-	# Deferred renderer
-	deferred_setting = job.get_configuration().find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
-
-	# Depth and motion vectors
-	if not (body_correspondence or clothing_labels):
-		deferred_setting.use32_bit_post_process_materials = True # export 32-bit float depth
-	else:
-		deferred_setting.use32_bit_post_process_materials = False
-
-	world_depth = deferred_setting.additional_post_process_materials[0]
-	if not (body_correspondence or clothing_labels):
-		world_depth.enabled = True
-	else:
-		world_depth.enabled = False
-	deferred_setting.additional_post_process_materials[0] = world_depth
-
-	motion_vectors = deferred_setting.additional_post_process_materials[1]
-	motion_vectors.enabled = False
-	deferred_setting.additional_post_process_materials[1] = motion_vectors
-
-	if not (body_correspondence or clothing_labels):
 		# Camera normals
-		material_name = material_cameranormal
-		material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_name}'")
-		if not material:
-			unreal.log_error('Cannot load material: ' + material_name)
-		post_process_cameranormal = unreal.MoviePipelinePostProcessPass(True, material)
-		deferred_setting.additional_post_process_materials.append(post_process_cameranormal)
+		# material_name = material_cameranormal
+		# material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_name}'")
+		# if not material:
+		# 	unreal.log_error('Cannot load material: ' + material_name)
+		# post_process_cameranormal = unreal.MoviePipelinePostProcessPass(True, material)
+		# deferred_setting.additional_post_process_materials.append(post_process_cameranormal)
 
-		# Roughness
-#		material_name = material_roughness
-#		material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_name}'")
-#		if not material:
-#			unreal.log_error('Cannot load material: ' + material_name)
-#		post_process_roughness = unreal.MoviePipelinePostProcessPass(True, material)
-#		deferred_setting.additional_post_process_materials.append(post_process_roughness)
-
-		# Specular (as stored in GBuffer)
-#		material_name = material_specular
-#		material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_name}'")
-#		if not material:
-#			unreal.log_error('Cannot load material: ' + material_name)
-#		post_process_specular = unreal.MoviePipelinePostProcessPass(True, material)
-#		deferred_setting.additional_post_process_materials.append(post_process_specular)
 
 	# Segmentation mask (Object ID) render setup
 	deferred_setting.disable_multisample_effects = True
@@ -338,15 +242,6 @@ def add_render_job_exr_normals(pipeline_queue, level_sequence_data, output_frame
 	else:
 		# Use layer system to identify masks
 		objectid_setting.id_type = unreal.MoviePipelineObjectIdPassIdType.LAYER
-
-	# BaseColor (as stored in GBuffer)
-	material_name = material_basecolor
-	material = unreal.EditorAssetLibrary.load_asset(f"Material'{material_name}'")
-	if not material:
-		unreal.log_error('Cannot load material: ' + material_name)
-	post_process_basecolor = unreal.MoviePipelinePostProcessPass(True, material)
-	deferred_setting.additional_post_process_materials.append(post_process_basecolor)
-
 
 def save_movie_render_queue(pipeline_queue, current_batch_index, movie_render_queue_root, movie_render_queue_template):
 	mrq_path = movie_render_queue_root + f"MRQ_Batch_{current_batch_index:02d}"
@@ -371,12 +266,10 @@ if __name__ == '__main__':
 		output_dir = sys.argv[1]
 
 	output_frame_step = 1
-	use_tsr = False
 	generate_png_image = False
 	generate_exr_image = False
 	generate_exr_depthmask = False
-	generate_exr_normals = False
-	multitexture_clothing_mode = False # render optimization which only renders exr and bodycorrespondence for first clothing texture index
+	generate_exr_depthmasknormals = False
 
 	spatial_samples = 1
 	temporal_samples = 1
@@ -387,9 +280,6 @@ if __name__ == '__main__':
 		spatial_samples = int(values[0].split("-")[1])
 		temporal_samples = int(values[0].split("-")[2])
 
-		if "TSR" in values:
-			use_tsr = True
-
 		if "PNG" in values:
 			generate_png_image = True
 
@@ -399,10 +289,7 @@ if __name__ == '__main__':
 		if "DepthMask" in values:
 			generate_exr_depthmask = True # generate depth map and segmentation masks in .exr file (separate render pass)
 		elif "DepthMaskNormals" in values:
-			generate_exr_normals = True # generate depth map, segmentation masks and camera space normals in .exr file (separate render pass)
-		elif "Multicam" in values:
-			generate_exr_normals = True
-			multitexture_clothing_mode = True
+			generate_exr_depthmasknormals = True # generate depth map, segmentation masks and normals in .exr file (separate render pass)
 
 	image_size=(1280,720)
 	if len(sys.argv) >= 4:
@@ -414,6 +301,10 @@ if __name__ == '__main__':
 	movie_render_queue_batches=0
 	if len(sys.argv) >= 5:
 		movie_render_queue_batches = int(sys.argv[4])
+
+	normals_type = None
+	if len(sys.argv) >= 6:
+		normals_type = sys.argv[5]
 
 	unreal.log(f"  Number of MovieRenderQueue batches: {movie_render_queue_batches}")
 
@@ -454,64 +345,19 @@ if __name__ == '__main__':
 
 		unreal.log(f"  Adding: {level_sequence_data.package_name}")
 
+		# High-quality image pass with motion blur
 		if generate_exr_image:
 			add_render_job_exr_image(pipeline_queue, level_sequence_data, output_frame_step, image_size, spatial_samples=spatial_samples, temporal_samples=temporal_samples)
+		elif generate_png_image:
+			add_render_job(pipeline_queue, level_sequence_data, output_frame_step, image_size, spatial_samples=spatial_samples, temporal_samples=temporal_samples)
 
-			if generate_exr_depthmask:
-				# Render depth and segmentation masks into multilayer EXR file
-				add_render_job_exr_depthmask(pipeline_queue, level_sequence_data, output_frame_step, image_size)
-
-		elif generate_exr_normals:
-			level_sequence_root = level_sequence_data.package_path
-			level_sequence_name = unreal.Paths.get_base_filename(level_sequence_data.package_name)
-
-			# Beauty render pass to PNG
-			add_render_job(pipeline_queue, level_sequence_data, output_frame_step, image_size, spatial_samples=spatial_samples, temporal_samples=temporal_samples, use_tsr=False)
-
-			render_exr = True
-			if multitexture_clothing_mode:
-				texture_index = int(level_sequence_name.split("_")[-1]) # seq_0111_000001
-				if texture_index >= 1:
-					render_exr = False
-
-			if render_exr:
-				add_render_job_exr_normals(pipeline_queue, level_sequence_data, output_frame_step, image_size, body_correspondence=False)
-
-			if render_exr:
-				# Check for body correspondence level sequences
-				level_sequence_bc_name = level_sequence_name + "_bc"
-				level_sequence_bc_path = f"{level_sequence_root}/BodyCorrespondence/{level_sequence_bc_name}"
-				if unreal.EditorAssetLibrary.does_asset_exist(level_sequence_bc_path):
-					unreal.log(f"  Adding: {level_sequence_bc_path}")
-
-					level_sequence_bc_data = unreal.get_editor_subsystem(unreal.EditorAssetSubsystem).find_asset_data(level_sequence_bc_path)
-					if not level_sequence_bc_data:
-						unreal.log_error(f"Cannot load level sequence data: {level_sequence_bc_path}")
-						sys.exit(1)
-					else:
-						add_render_job_exr_normals(pipeline_queue, level_sequence_bc_data, output_frame_step, image_size, body_correspondence=True)
-
-
-				# Check for clothing label level sequences
-				level_sequence_cl_name = level_sequence_name + "_cl"
-				level_sequence_cl_path = f"{level_sequence_root}/ClothingLabels/{level_sequence_cl_name}"
-				if unreal.EditorAssetLibrary.does_asset_exist(level_sequence_cl_path):
-					unreal.log(f"  Adding: {level_sequence_cl_path}")
-
-					level_sequence_cl_data = unreal.get_editor_subsystem(unreal.EditorAssetSubsystem).find_asset_data(level_sequence_cl_path)
-					if not level_sequence_cl_data:
-						unreal.log_error(f"Cannot load level sequence data: {level_sequence_cl_path}")
-						sys.exit(1)
-					else:
-						add_render_job_exr_normals(pipeline_queue, level_sequence_cl_data, output_frame_step, image_size, body_correspondence=False, clothing_labels=True)
-		else:
-			# generate_exr_normals == False
-			if generate_png_image:
-				add_render_job(pipeline_queue, level_sequence_data, output_frame_step, image_size, spatial_samples=spatial_samples, temporal_samples=temporal_samples, use_tsr=use_tsr)
-
-			if generate_exr_depthmask:
-				# Render depth and segmentation masks into multilayer EXR file
-				add_render_job_exr_depthmask(pipeline_queue, level_sequence_data, output_frame_step, image_size)
+		# Depth pass, 1 temporal sample, no motion blur
+		if generate_exr_depthmasknormals:
+			# Render depth, segmentation masks and normals into multilayer EXR file
+			add_render_job_exr_depthmask(pipeline_queue, level_sequence_data, output_frame_step, image_size, normals_type=normals_type)
+		elif generate_exr_depthmask:
+			# Render depth and segmentation masks into multilayer EXR file
+			add_render_job_exr_depthmask(pipeline_queue, level_sequence_data, output_frame_step, image_size, normals_type=None)
 
 		if movie_render_queue_batches > 0:
 			# Batch render mode: Save current render job subset as MovieRenderQueue asset for later rendering via command-line

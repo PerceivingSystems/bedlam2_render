@@ -37,59 +37,39 @@ process_exr() {
         oiiotool --threads $NUM_THREADS "$input_exr" --ch R,G,B $COLORCONVERT -o "$output"
     fi
 
-    # BaseColor, 8-bit RGB (sRGB)
-    type=basecolor
-    output_dir="${output_root}/${type}/${sequence_name}"
-    if [ ! -d "$output_dir" ]; then
-        mkdir -p $output_dir
-    fi
-    output="${output_dir}/${output_prefix}_${type}.png"
-    if [ -f "$output" ]; then
-        echo "  Skipping. File exists: '$output'"
-    else
-        oiiotool --threads $NUM_THREADS "$input_exr" --ch FinalImageMovieRenderQueue_BaseColor.R,FinalImageMovieRenderQueue_BaseColor.G,FinalImageMovieRenderQueue_BaseColor.B $COLORCONVERT -o "$output"
-    fi
-
-    # CameraNormal, 8-bit RGB (linear)
+    # Optional: CameraNormal, 8-bit RGB (linear)
     type=cameranormal
-    output_dir="${output_root}/${type}/${sequence_name}"
-    if [ ! -d "$output_dir" ]; then
-        mkdir -p $output_dir
+    channel_name="FinalImageMovieRenderQueue_CameraNormal"
+    if oiiotool --info -v "$input_exr" | grep -Fq "$channel_name"; then
+        output_dir="${output_root}/${type}/${sequence_name}"
+        if [ ! -d "$output_dir" ]; then
+            mkdir -p $output_dir
+        fi
+        output="${output_dir}/${output_prefix}_${type}.png"
+        if [ -f "$output" ]; then
+            echo "  Skipping. File exists: '$output'"
+        else
+            oiiotool --threads $NUM_THREADS "$input_exr" --ch ${channel_name}.R,${channel_name}.G,${channel_name}.B -o "$output"
+        fi
     fi
-    output="${output_dir}/${output_prefix}_${type}.png"
-    if [ -f "$output" ]; then
-        echo "  Skipping. File exists: '$output'"
-    else
-        oiiotool --threads $NUM_THREADS "$input_exr" --ch FinalImageMovieRenderQueue_CameraNormal.R,FinalImageMovieRenderQueue_CameraNormal.G,FinalImageMovieRenderQueue_CameraNormal.B -o "$output"
+
+    # Optional: WorldNormal, 8-bit RGB (linear)
+    type=worldnormal
+    channel_name="FinalImageMovieRenderQueue_WorldNormal"
+    if oiiotool --info -v "$input_exr" | grep -Fq "$channel_name"; then
+        output_dir="${output_root}/${type}/${sequence_name}"
+        if [ ! -d "$output_dir" ]; then
+            mkdir -p $output_dir
+        fi
+        output="${output_dir}/${output_prefix}_${type}.png"
+        if [ -f "$output" ]; then
+            echo "  Skipping. File exists: '$output'"
+        else
+            oiiotool --threads $NUM_THREADS "$input_exr" --ch ${channel_name}.R,${channel_name}.G,${channel_name}.B -o "$output"
+        fi
     fi
 
-    # Roughness, 8-bit LinearGray 256c
-#    type=roughness
-#    output_dir="${output_root}/${type}/${sequence_name}"
-#    if [ ! -d "$output_dir" ]; then
-#        mkdir -p $output_dir
-#    fi
-#    output="${output_dir}/${output_prefix}_${type}.png"
-#    if [ -f "$output" ]; then
-#        echo "  Skipping. File exists: '$output'"
-#    else
-#        oiiotool --threads $NUM_THREADS "$input_exr" --ch FinalImageMovieRenderQueue_Roughness.R -o "$output"
-#    fi
-
-    # Specular, 8-bit LinearGray 256c
-#    type=specular
-#    output_dir="${output_root}/${type}/${sequence_name}"
-#    if [ ! -d "$output_dir" ]; then
-#        mkdir -p $output_dir
-#    fi
-#    output="${output_dir}/${output_prefix}_${type}.png"
-#    if [ -f "$output" ]; then
-#        echo "  Skipping. File exists: '$output'"
-#    else
-#        oiiotool --threads $NUM_THREADS "$input_exr" --ch FinalImageMovieRenderQueue_Specular.R -o "$output"
-#    fi
-
-    # WorldDepth, EXR (32-bit float)
+    # WorldDepth, EXR (16-bit float)
     type=depth
     output_dir="${output_root}/${type}/${sequence_name}"
     if [ ! -d "$output_dir" ]; then
@@ -99,7 +79,7 @@ process_exr() {
     if [ -f "$output" ]; then
         echo "  Skipping. File exists: '$output'"
     else
-        oiiotool --threads $NUM_THREADS "$input_exr" --ch FinalImageMovieRenderQueue_WorldDepth.R --chnames Depth -o "$output"
+        oiiotool --threads $NUM_THREADS "$input_exr" --ch FinalImageMovieRenderQueue_WorldDepth.R --chnames Depth -d half -o "$output"
     fi
 }
 
