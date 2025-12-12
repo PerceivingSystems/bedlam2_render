@@ -11,7 +11,7 @@ import sys
 import time
 import unreal
 
-data_root = r"C:\bedlam2\abc\clothing\unreal_import"
+data_root = r"C:\bedlam2\clothing\abc"
 
 whitelist_subjects_path = None
 

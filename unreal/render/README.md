@@ -31,7 +31,7 @@ BEDLAM2 rendering can use the following special plugins:
       + Available in https://bedlam2.is.tuebingen.mpg.de/ download area
         + Unreal Engine Assets for Rendering
           + BE_Core
-    + Copy BE_Core folder contents to `UE_5.3\Engine\Content\PS\Core` Engine install directory
+    + Copy BE_Core folder contents to `UE_5.3\Engine\Content\PS\Bedlam\Core` Engine install directory
       + See [unreal_editor_assets.md](unreal_editor_assets.md) for expected folder layout
 
 + Imported BEDLAM2 body and clothing assets under `UE_5.3\Engine\Content\PS` Engine install directory

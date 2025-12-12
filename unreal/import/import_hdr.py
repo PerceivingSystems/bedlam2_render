@@ -9,7 +9,7 @@ import os
 import time
 import unreal
 
-data_root = r"C:\bedlam2\render\hdr"
+data_root = r"C:\bedlam2\hdr"
 
 data_root_unreal = "/Engine/PS/Bedlam/HDRI/8k"
 

@@ -14,7 +14,6 @@ import unreal
 data_root = r"C:\bedlam2\animations\abc"
 
 whitelist_subjects_path = None
-
 whitelist_animations_path = None
 
 data_root_unreal = "/Engine/PS/Bedlam/SMPLX_LH"

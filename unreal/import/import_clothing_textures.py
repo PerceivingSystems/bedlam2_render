@@ -3,17 +3,15 @@
 #
 # Import clothing textures and generate MaterialInstances
 #
-# TODO: Use custom master material for label textures
-#
 # Notes:
 # + Use Unreal 5.0 or disable `Interchange Editor/Framework/Tests` plugins in 5.2
 #   + Unreal 5.2+ uses Interchange Framework and will ignore `destination_name`
-#     + https://docs.unrealengine.com/5.2/en-US/PythonAPI/class/AssetImportTask.html#unreal-assetimporttask
+#     + https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AssetImportTask?application_version=5.2
 
 from pathlib import Path
 import unreal
 
-DATA_ROOT = r"C:\bedlam2\textures\clothing\unreal_import"
+DATA_ROOT = r"C:\bedlam2\textures\clothing"
 DATA_ROOT_UNREAL = "/Engine/PS/Bedlam/Clothing/Materials"
 MASTER_MATERIAL_PATH = "/Engine/PS/Bedlam/Core/Materials/M_Clothing"
 def import_textures(texture_paths):
@@ -34,14 +32,6 @@ def import_textures(texture_paths):
         # gr_aaron_009\texture_01\texture_01_diffuse.png
         outfit_name = texture_path.parent.parent.name
         texture_name = texture_path.parent.name
-
-        # Check if we have label texture
-        label_texture = False
-        if "texture_00" in str(texture_path):
-            label_texture = True
-            import_normal_map = False
-            unreal.log_error("TODO: Use custom master material for label textures")
-            return False
 
         import_tasks = []
 
@@ -81,24 +71,6 @@ def import_textures(texture_paths):
         # Import diffuse and normal textures
         unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(import_tasks)
 
-        texture_asset = None
-        # Fix label texture properties: no mipmaps, no texture compression
-        if label_texture:
-            texture_asset = unreal.EditorAssetLibrary.load_asset(f"Texture2D'{texture_asset_path}'")
-            if not texture_asset:
-                unreal.log_error(f"Cannot load texture: {texture_asset_path}")
-                return False
-
-            texture_asset.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
-            texture_asset.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)
-            texture_asset.set_editor_property("filter", unreal.TextureFilter.TF_NEAREST)
-
-            # Unreal 5.2 legacy importer (disabled Interchange Framework) imports some clothing label textures not as sRGB.
-            # This is due to them being falsely auto-detected as normal map. We force sRGB texture source on import to prevent this issue.
-            texture_asset.set_editor_property("srgb", True)
-
-            unreal.EditorAssetLibrary.save_loaded_asset(texture_asset, only_if_is_dirty=False)
-
         # Create MaterialInstance
         material_instance_name = f"MI_{outfit_name}_{texture_name}"
         material_instance_dir = texture_asset_dir
@@ -110,11 +82,10 @@ def import_textures(texture_paths):
             material_instance = unreal.AssetToolsHelpers.get_asset_tools().create_asset(asset_name=material_instance_name, package_path=material_instance_dir, asset_class=unreal.MaterialInstanceConstant, factory=unreal.MaterialInstanceConstantFactoryNew())
             unreal.MaterialEditingLibrary.set_material_instance_parent(material_instance, master_material)
 
-            if texture_asset is None:
-                texture_asset = unreal.EditorAssetLibrary.load_asset(f"Texture2D'{texture_asset_path}'")
-                if not texture_asset:
-                    unreal.log_error(f"Cannot load texture: {texture_asset_path}")
-                    return False
+            texture_asset = unreal.EditorAssetLibrary.load_asset(f"Texture2D'{texture_asset_path}'")
+            if not texture_asset:
+                unreal.log_error(f"Cannot load texture: {texture_asset_path}")
+                return False
             unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(material_instance, 'BaseColor', texture_asset)
 
             if import_normal_map:

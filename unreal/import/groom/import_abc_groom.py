@@ -10,14 +10,11 @@
 #   + Groom
 #
 
-import math
-import os
 from pathlib import Path
-import sys
 import time
 import unreal
 
-data_root = r"C:\bedlam2\abc\groom"
+data_root = r"C:\bedlam2\groom"
 data_root_unreal = "/Engine/PS/Bedlam/Hair/VineFX"
 
 def import_abc(data_root, data_root_unreal):

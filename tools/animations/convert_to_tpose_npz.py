@@ -40,11 +40,16 @@ output_root = Path(sys.argv[2])
 npz_paths = input_root.rglob("*.npz")
 used_subjects = []
 for npz_path in npz_paths:
-    subject = npz_path.parent.parent.name
+    subject = None
+    if npz_path.stem.startswith("moyo"):
+        subject = "moyo"
+    else:
+        subject = npz_path.stem.rsplit("_", maxsplit=1)[0]
+
     if subject not in used_subjects:
         used_subjects.append(subject)
-        output_path = output_root / subject / "0000" / "motion_seq.npz"
+        output_path = output_root / f"{subject}_0000.npz"
 
         if not output_path.parent.exists():
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            save_tpose_npz(npz_path, output_path)
+        save_tpose_npz(npz_path, output_path)

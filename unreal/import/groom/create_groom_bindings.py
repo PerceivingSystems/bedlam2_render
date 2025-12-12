@@ -16,7 +16,6 @@ source_geometry_cache_path = "/Engine/PS/Bedlam/Core/SMPLX/smplx_lh_n_abc"
 
 data_root_unreal_groom = "/Engine/PS/Bedlam/Hair/VineFX"
 data_root_unreal_geometrycache = "/Engine/PS/Bedlam/SMPLX_LH"
-#data_root_unreal_geometrycache = "/Engine/PS/Bedlam/SMPLX_LH/moyo"
 
 def create_groom_binding_geometrycache(groom_assetdata, source_geometry_cache_asset, target_geometry_cache_assets, data_root_unreal_bindings):
     unreal.log(f"Generating groom bindings (geometry cache) for hair asset: {groom_assetdata.package_name}")
