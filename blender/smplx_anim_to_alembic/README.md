@@ -5,6 +5,8 @@ We later import these ABC files into Unreal but they can also be used in other t
 
 Note that the SMPL-X pose correctives are baked in the Alembic geometry cache and will be automatically applied when playing back the Alembic files after importing. Additional plugins do not need to be installed for proper playback.
 
+Note that this tool does not create the modified bodies for shoe rendering (toeless sock feet). Please use the corresponding code repository on the [BEDLAM2 project website](https://bedlam2.is.tuebingen.mpg.de/#code) for this.
+
 # Requirements
 + Windows 10 or later
     + Data preparation stage will likely also work under Linux or macOS thanks to Blender but we have not tested this and are not providing support for this option

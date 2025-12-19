@@ -9,20 +9,21 @@ Requirements:
   + Unreal Engine 5.3.2 with active [Python Editor Script Plugin](https://dev.epicgames.com/documentation/en-us/unreal-engine/scripting-the-unreal-editor-using-python?application_version=5.3)
 
 Related items:
-+ BEDLAM2 Unreal Assets Starter Pack (BE_UASP)
-  + Includes Unreal 5.3.2 assets which were imported using these helper scripts
++ BEDLAM2 Unreal Assets Starter Pack
+  + Includes Unreal 5.3.2 assets which were imported using the scripts in this section
     + Format: `.uasset` (Unreal 5.3.2)
   + Available in download area of [BEDLAM2 website](https://bedlam2.is.tuebingen.mpg.de/)
   + Subset of bodies/clothing used for rendering of BEDLAM2 dataset
   + Starter pack asset groups
-    + Animated bodies: BE_UASP_SMPLXLH
-    + Body textures: BE_UASP_SMPLXTextures
-    + Simulated clothing and textures (BE_UASP_Clothing)
-    + HDR images: BE_UASP_HDRI
-    + Hair: BE_UASP_Hair
+    + Animated bodies
+    + Body textures
+    + Simulated clothing and textures
+    + HDR images
+    + Hair
       + Strand-based grooms
-    + Shoes: BE_UASP_Shoes
+    + Shoes
       + Displacement maps and color textures for toeless SMPL-X modification
+  + See also: [Quickstart for BEDLAM2 Unreal Rendering](../render/unreal_quickstart.md)
 
 ## Animated SMPL-X bodies
 + [import_abc_smplx_batch.py](import_abc_smplx_batch.py)
@@ -76,7 +77,7 @@ Related items:
         + `py -3 import_abc_clothing_batch.py 300 10`
 
 ## Body textures
-+ The following import scripts are not needed if you use the BE_UASP_SMPLXTextures starter pack which contains all released 100 SMPL-X body textures in `.uasset` format
+The following script is not needed if you use the body textures from the Unreal Assets Starter Pack which contains all released 100 SMPL-X body textures in `.uasset` format.
 + [create_body_materials.py](create_body_materials.py)
 + Use this script to generate required `MaterialInstance` materials for imported BEDLAM2 body textures
 + Requirements
@@ -113,8 +114,8 @@ Related items:
     + Content Browser>Save All
 
 ## HDR images
+The following script is not needed if you only use the HDR images from the Unreal Assets Starter Pack which contains all HDR images used for BEDLAM2 dataset rendering.
 + [import_hdr.py](import_hdr.py)
-  + Not needed if you only use the HDR images in the BE_UASP_HDRI starter pack
 + Use this script to import panoramic high-dynamic range images in HDR format for image-based lighting
     + Not needed for existing 3D environments from Unreal Marketplace
 + [List of used BEDLAM2 HDR images](../../config/whitelist_hdri.txt)
@@ -137,7 +138,7 @@ Related items:
 ## Hair
 + [import_abc_groom.py](groom/import_abc_groom.py)
   + Batch import Alembic .abc groom files into Unreal Engine
-  + Not needed if you use the BE_UASP_Hair starter pack
+  + Not needed if you use the hair assets from the Unreal Assets Starter Pack which contains all 40 released grooms used for BEDLAM2 dataset rendering
   + See file header for plugin requirements
   + Source data: BEDLAM2 hair grooms in Alembic `abc` format
     + BEDLAM2 website>Downloads>Hair>Grooms in abc format
@@ -146,8 +147,9 @@ Related items:
   + Run script via Execute Python Script
 
 + [set_groom_properties.py](groom/set_groom_properties.py)
-  + Not needed if you use the BE_UASP_Hair starter pack
   + Apply individual Strands Hair Width settings for selected Content Browser Groom assets
+  + Not needed if you use the hair assets from the Unreal Assets Starter Pack which contains all 40 released grooms used for BEDLAM2 dataset rendering
+
 + [create_groom_bindings.py](groom/create_groom_bindings.py)
   + Create GeometryCache groom binding assets for all available target body shapes
     + Needed to adapt the default hair grooms to indidual head shapes of target bodies
@@ -160,7 +162,7 @@ Related items:
       + See `Animated SMPL-X bodies` section above
 
 ## Shoes
-The following import scripts are not needed if you use the BE_UASP_Shoes starter pack and only use the released BEDLAM2 body textures
+The following import scripts are not needed if you only use the shoes from the Unreal Assets Starter Pack and only use the released BEDLAM2 body textures.
 + [import_shoe_textures.py](shoes/import_shoe_textures.py)
   + Import shoe textures (color, normal, displacement)
   + Usage

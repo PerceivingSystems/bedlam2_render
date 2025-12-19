@@ -20,6 +20,8 @@ USE_MOYO=False
 SMPLX_NPZ_ANIMATION_FOLDER = Path(f"/mnt/c/bedlam2/animations/{DATA_SUBSET}")
 
 WHITELIST_PATH = CONFIG_ROOT / f"whitelist_animations_{DATA_SUBSET}.json" # Per-subject whitelisted animations
+#WHITELIST_PATH = CONFIG_ROOT / f"whitelist_animations_starterpack.json" # Starterpack animations
+
 TEXTURES_BODY_PATH = CONFIG_ROOT / "textures_body.txt" # List of available body textures
 
 # Override paths for MOYO renders
@@ -276,3 +278,6 @@ configs["be_hdri_5_10_test_moyo"] = Config(unique_subjects=False,use_hair=False,
 
 # 1 subject, 10 sequences, stage center at origin, no hair, no shoes, used in be_make_hdri_template.sh template sample
 configs["be_hdri_1_10_test"] = Config(use_hair=False, use_shoes=True, safety_zone_width=1500.0, safety_zone_height=1500.0, bodies_min=1, bodies_max=1, x_offset=0, x_min=-10, x_max=10, y_min=-10, y_max=10, yaw_min=0, yaw_max=360, num_sequences=10, camera_hfov_deg=65.470451)
+
+# Starterpack animations with hair and shoes, 1 subjects, 150 sequences, stage center at origin, use in be_make_hdri_template.sh template sample
+configs["be_hdri_1_151_starterpack"] = Config(use_shoes=True, use_body_yaw_reference=True, safety_zone_width=1500.0, safety_zone_height=1500.0, use_all_animations=True, randomize_animations=False, use_hair=True, bodies_min=1, bodies_max=1, x_offset=0, x_min=-10, x_max=10, y_min=-10, y_max=10, yaw_min=-90, yaw_max=90, num_sequences=150, unique_subjects=False, unique_sequences=True, camera_hfov_deg=65.470451)

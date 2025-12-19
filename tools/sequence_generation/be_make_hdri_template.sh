@@ -7,6 +7,10 @@ renderroot="/mnt/c/bedlam2/images"
 
 renderjob="test_hdri"
 grouptype="be_hdri_1_10_test"
+
+#renderjob="starterpack"
+#grouptype="be_hdri_1_151_starterpack"
+
 cameratype_modify="cam_hdri_18-100"
 cameratype_animate="cam_hdri_18-100"
 outputroot="$renderroot/$renderjob"

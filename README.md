@@ -1,15 +1,7 @@
 # BEDLAM2 Render Tools
-![status](https://img.shields.io/badge/status-work--in--progress-orange)
-![eta](https://img.shields.io/badge/ETA-December%2019%202025-blue)
-
 This repository contains the render pipeline tools used for the generation of the [BEDLAM2.0](https://bedlam2.is.tue.mpg.de) synthetic video dataset (NeurIPS 2025, Datasets and Benchmarks track).
 
 It includes automation scripts for SMPL-X data preparation in Blender, Unreal Engine 5.3.2 data import and rendering, and data post processing.
-
----
-⚠️ **Work in Progress** ⚠️
-
-This project is actively under development for public code release. The render pipeline code with required dependencies and documentation is expected to be completed by **December 19, 2025**. Please see [Issue Tracker](https://github.com/PerceivingSystems/bedlam2_render/issues) for additional details. You can use the GitHub repo  **Watch button** if you want to get notified about incoming updates.
 
 ---
 
@@ -31,6 +23,7 @@ Related repositories:
 ### Data preparation for Unreal (Blender)
 + Create animated [SMPL-X](https://smpl-x.is.tue.mpg.de/) bodies (locked head, no head bun, neutral model, UV map 2023) from SMPL-X animation data files and export in Alembic ABC format. SMPL-X pose correctives are baked in the Alembic geometry cache and will be used in Unreal without any additional software requirements.
 + Details: [blender/smplx_anim_to_alembic/](blender/smplx_anim_to_alembic/)
++ If you want to create modified bodies for shoe rendering (toeless sock feet) then please use the corresponding code repository on the [BEDLAM2 project website](https://bedlam2.is.tuebingen.mpg.de/#code)
 
 ### Data import (Unreal)
 + Import simulated clothing and SMPL-X Alembic ABC files as `GeometryCache`
@@ -62,6 +55,11 @@ BEDLAM2 Unreal render setup utilizes a data-driven design approach where externa
 + Extract separate depth maps (EXR), segmentation masks (PNG) and normal images (world-space or camera-space, PNG) if required EXR data is available
 + Details: [tools/post_render_pipeline/be_post_render_pipeline.sh](tools/post_render_pipeline/be_post_render_pipeline.sh)
 
+## Quickstart Unreal rendering with BEDLAM2 Unreal Assets Starter Pack
++ The starter pack contains a subset of 150 motions with simulated clothing for 51 body shapes setup for rendering with shoes (toeless sock feet) and hair. Also included are body and clothing textures, hair and shoe assets, and HDR images.
++ You can use this to test rendering. Data preparation for Unreal and the data import render pipeline stages are not needed since these render assets are already setup in Unreal.
++ Details: [unreal/render/unreal_quickstart.md](unreal/render/unreal_quickstart.md)
+
 # Getting Started
 
 ## Requirements
@@ -90,7 +88,9 @@ C:\bedlam2\render
 └── unreal
 ```
 
-2. Create WSL2 Python 3.10.6+ venv at `$HOME/.virtualenvs/bedlam2/` , activate it and install required packages
+2. Create WSL2 Python 3.10.6+ venv at `$HOME/.virtualenvs/bedlam2/`
+
+3. Activate it and install required packages
 ```
 pip install -r requirements.txt
 ```
