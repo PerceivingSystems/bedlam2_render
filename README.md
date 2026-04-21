@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19677727.svg)](https://doi.org/10.5281/zenodo.19677727)
+
 # BEDLAM2 Render Tools
 This repository contains the render pipeline tools used for the generation of the [BEDLAM2.0](https://bedlam2.is.tue.mpg.de) synthetic video dataset (NeurIPS 2025, Datasets and Benchmarks track).
 
