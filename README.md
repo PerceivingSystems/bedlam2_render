@@ -18,7 +18,7 @@ Related repositories:
     + GVHMR: [Training and evaluation code of GVHMR on BEDLAM2 dataset](https://github.com/mkocabas/GVHMR_BEDLAM2)
     + PromptHMR: [Checkpoints of PromptHMR-video trained on BEDLAM1 and BEDLAM2 datasets](https://github.com/yufu-wang/PromptHMR)
 + [BEDLAM2 Retargeting](https://github.com/PerceivingSystems/bedlam2_retargeting)
-+ Rendering: [BEDLAM CVPR2023 render pipeline tools for Unreal 5.0](https://bedlam.is.tue.mpg.de)
++ Rendering: [BEDLAM CVPR2023 render pipeline tools for Unreal 5.0](https://github.com/PerceivingSystems/bedlam_render)
 
 # Render Pipeline
 
