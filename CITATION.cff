@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the BEDLAM2.0 paper."
+type: software
+title: "BEDLAM2.0 Render Tools"
+abstract: "Render pipeline tools used to generate the BEDLAM2.0 synthetic dataset."
+authors:
+  - family-names: "Tesch"
+    given-names: "Joachim"
+    affiliation: "Max Planck Institute for Intelligent Systems, Tübingen, Germany"
+    orcid: "https://orcid.org/0009-0009-2110-4953"
+repository-code: "https://github.com/PerceivingSystems/bedlam2_render"
+url: "https://bedlam2.is.tue.mpg.de/"
+license-url: "https://bedlam2.is.tuebingen.mpg.de/license.html"
+version: "1.0.0"
+date-released: "2026-04-21"
+preferred-citation:
+  type: conference-paper
+  title: "BEDLAM2.0: Synthetic Humans and Cameras in Motion"
+  authors:
+    - family-names: "Tesch"
+      given-names: "Joachim"
+    - family-names: "Becherini"
+      given-names: "Giorgio"
+    - family-names: "Achar"
+      given-names: "Prerana"
+    - family-names: "Yiannakidis"
+      given-names: "Anastasios"
+    - family-names: "Kocabas"
+      given-names: "Muhammed"
+    - family-names: "Patel"
+      given-names: "Priyanka"
+    - family-names: "Black"
+      given-names: "Michael J."
+  collection-title: "The Thirty-ninth Annual Conference on Neural Information Processing Systems Datasets and Benchmarks Track"
+  year: 2025
+  url: "https://arxiv.org/abs/2511.14394"
