@@ -1,4 +1,6 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19677727.svg)](https://doi.org/10.5281/zenodo.19677727)
+[![Unreal Engine](https://img.shields.io/badge/Unreal_Engine-5.3-202020.svg)](https://www.unrealengine.com)
+[![arXiv](https://img.shields.io/badge/arXiv-2511.14394-b31b1b.svg)](https://arxiv.org/abs/2511.14394)
+[![DOI](https://img.shields.io/badge/DOI-10.5281/zenodo.19677727-blue)](https://doi.org/10.5281/zenodo.19677727)
 
 # BEDLAM2 Render Tools
 This repository contains the render pipeline tools used for the generation of the [BEDLAM2.0](https://bedlam2.is.tue.mpg.de) synthetic video dataset (NeurIPS 2025, Datasets and Benchmarks track).
